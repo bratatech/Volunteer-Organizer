@@ -1,8 +1,43 @@
+# Dependencies
 node_modules/
+frontend/node_modules/
+backend/node_modules/
+
+# Environment variables
 .env
+.env.local
+backend/.env
+
+# Build outputs
 dist/
 build/
+frontend/dist/
+frontend/build/
+
+# Logs
 *.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS files
 .DS_Store
+Thumbs.db
+
+# Database files (JSON storage)
 backend/data/*.json
 !backend/data/.gitkeep
+
+# Vercel
+.vercel
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Temporary files
+tmp/
+temp/
