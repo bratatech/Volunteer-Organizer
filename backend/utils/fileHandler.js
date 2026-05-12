@@ -1,10 +1,22 @@
 const fs = require('fs').promises;
 const path = require('path');
 
-const dataDir = path.join(__dirname, '../data');
+// Use /tmp for Vercel serverless, otherwise use local data directory
+const isVercel = process.env.VERCEL === '1';
+const dataDir = isVercel ? '/tmp/data' : path.join(__dirname, '../data');
+
+// Ensure data directory exists
+const ensureDataDir = async () => {
+  try {
+    await fs.mkdir(dataDir, { recursive: true });
+  } catch (error) {
+    // Directory might already exist
+  }
+};
 
 const readData = async (filename) => {
   try {
+    await ensureDataDir();
     const filePath = path.join(dataDir, filename);
     const data = await fs.readFile(filePath, 'utf8');
     return JSON.parse(data);
@@ -18,6 +30,7 @@ const readData = async (filename) => {
 
 const writeData = async (filename, data) => {
   try {
+    await ensureDataDir();
     const filePath = path.join(dataDir, filename);
     await fs.writeFile(filePath, JSON.stringify(data, null, 2));
   } catch (error) {
