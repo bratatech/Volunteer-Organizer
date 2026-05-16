@@ -16,7 +16,7 @@ router.post('/volunteer/signup', async (req, res) => {
     }
 
     // Check if email is a college email
-    if (!email.endsWith('.edu')) {
+    if (!email.endsWith('.edu.in')) {
       return res.status(400).json({ message: 'Please use a valid college email' });
     }
 
