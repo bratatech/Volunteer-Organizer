@@ -10,7 +10,7 @@
       }
     },
     {
-      "src": "package.json",
+      "src": "api/index.js",
       "use": "@vercel/node",
       "config": {
         "includeFiles": [
@@ -27,11 +27,7 @@
     },
     {
       "src": "/(.*)",
-      "dest": "/frontend/$1"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/api/index.js"
+      "dest": "/frontend/dist/$1"
     }
   ],
   "env": {
