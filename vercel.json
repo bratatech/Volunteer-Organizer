@@ -10,12 +10,12 @@
       }
     },
     {
-      "src": "api/index.js",
+      "src": "package.json",
       "use": "@vercel/node",
       "config": {
         "includeFiles": [
-          "backend/**",
-          ".env.production"
+          "api/**",
+          "backend/**"
         ]
       }
     }
