@@ -1,5 +1,6 @@
 {
   "version": 2,
+  "buildCommand": "npm run build-frontend",
   "builds": [
     {
       "src": "frontend/package.json",
@@ -12,7 +13,10 @@
       "src": "api/index.js",
       "use": "@vercel/node",
       "config": {
-        "includeFiles": ["backend/**"]
+        "includeFiles": [
+          "backend/**",
+          ".env.production"
+        ]
       }
     }
   ],
@@ -24,9 +28,14 @@
     {
       "src": "/(.*)",
       "dest": "/frontend/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/api/index.js"
     }
   ],
   "env": {
     "NODE_ENV": "production"
-  }
+  },
+  "outputDirectory": "frontend/dist"
 }
