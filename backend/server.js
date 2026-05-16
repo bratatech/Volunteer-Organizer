@@ -8,9 +8,10 @@ const taskRoutes = require('./routes/tasks');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+const allowedOrigin = process.env.FRONTEND_URL || '*';
 
 // Middleware
-app.use(cors());
+app.use(cors({ origin: allowedOrigin }));
 app.use(express.json());
 
 // Routes
