@@ -30,6 +30,8 @@ export const getAllActivities = () => api.get('/activities');
 export const getMyActivities = () => api.get('/activities/my-activities');
 export const createActivity = (data) => api.post('/activities', data);
 export const joinActivity = (id) => api.post(`/activities/${id}/join`);
+export const getActivityVolunteers = (id) => api.get(`/activities/${id}/volunteers`);
+export const setActivityLeader = (id, email) => api.patch(`/activities/${id}/leader`, { email });
 
 // AI APIs
 export const getAISuggestion = (data) => api.post('/ai/suggest-area', data);
