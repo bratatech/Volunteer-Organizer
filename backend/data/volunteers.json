@@ -1,1 +1,24 @@
-[]
+[
+  {
+    "id": "vol-001",
+    "email": "aarav@college.edu.in",
+    "password": "$2b$10$FjD6ATBwaoX7fOVeokr8AOJw6RcdW/Va2b7ZjwN4HnGDtJ0mEYayq",
+    "rollNo": "CS202601",
+    "phoneNo": "9876543210",
+    "role": "volunteer",
+    "createdAt": "2026-05-17T13:45:00.000Z",
+    "activities": [
+      "act-001"
+    ]
+  },
+  {
+    "id": "vol-002",
+    "email": "meera@college.edu.in",
+    "password": "$2b$10$FjD6ATBwaoX7fOVeokr8AOJw6RcdW/Va2b7ZjwN4HnGDtJ0mEYayq",
+    "rollNo": "EE202614",
+    "phoneNo": "9876543211",
+    "role": "volunteer",
+    "createdAt": "2026-05-17T13:50:00.000Z",
+    "activities": []
+  }
+]

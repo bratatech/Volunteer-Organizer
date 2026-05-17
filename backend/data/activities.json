@@ -1,1 +1,28 @@
-[]
+[
+  {
+    "id": "act-001",
+    "title": "Registration Desk",
+    "description": "Help attendees check in, verify passes, and guide them to the welcome area.",
+    "date": "2026-05-22",
+    "location": "Main Auditorium Lobby",
+    "volunteersNeeded": 4,
+    "leaderEmail": "organizer@example.com",
+    "organizerId": "org-001",
+    "volunteers": [
+      "vol-001"
+    ],
+    "createdAt": "2026-05-17T13:55:00.000Z"
+  },
+  {
+    "id": "act-002",
+    "title": "Stage Coordination",
+    "description": "Coordinate backstage movement, cue performers, and keep event timings on track.",
+    "date": "2026-05-23",
+    "location": "Open Air Theatre",
+    "volunteersNeeded": 3,
+    "leaderEmail": "organizer@example.com",
+    "organizerId": "org-001",
+    "volunteers": [],
+    "createdAt": "2026-05-17T14:00:00.000Z"
+  }
+]
