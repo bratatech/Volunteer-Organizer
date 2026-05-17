@@ -21,7 +21,7 @@ router.post('/', authenticateToken, async (req, res) => {
       return res.status(403).json({ message: 'Only organizers can create activities' });
     }
 
-    const { title, description, date, location, volunteersNeeded } = req.body;
+    const { title, description, date, location, volunteersNeeded, leaderEmail } = req.body;
 
     if (!title || !description || !date) {
       return res.status(400).json({ message: 'Title, description, and date are required' });
@@ -36,6 +36,7 @@ router.post('/', authenticateToken, async (req, res) => {
       date,
       location: location || 'TBD',
       volunteersNeeded: volunteersNeeded || 0,
+      leaderEmail: leaderEmail || null,
       organizerId: req.user.id,
       volunteers: [],
       status: 'upcoming',

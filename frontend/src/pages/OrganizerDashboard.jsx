@@ -16,7 +16,8 @@ const OrganizerDashboard = ({ user, onLogout }) => {
     description: '',
     date: '',
     location: '',
-    volunteersNeeded: ''
+    volunteersNeeded: '',
+    leaderEmail: ''
   });
   const [taskForm, setTaskForm] = useState({
     title: '',
@@ -74,7 +75,8 @@ const OrganizerDashboard = ({ user, onLogout }) => {
         description: '',
         date: '',
         location: '',
-        volunteersNeeded: ''
+        volunteersNeeded: '',
+        leaderEmail: ''
       });
       fetchData();
     } catch (error) {
@@ -306,6 +308,20 @@ const OrganizerDashboard = ({ user, onLogout }) => {
                     onChange={handleChange}
                   />
                 </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Leader Email (Optional)
+                </label>
+                <input
+                  type="email"
+                  name="leaderEmail"
+                  className="input-field"
+                  placeholder="e.g., leader@student.com"
+                  value={formData.leaderEmail}
+                  onChange={handleChange}
+                />
               </div>
 
               <button

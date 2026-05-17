@@ -35,6 +35,12 @@ const ActivityCard = ({ activity, onJoin, isVolunteer, showJoinButton = false })
           <span className="font-semibold mr-2">👥 Volunteers:</span>
           <span>{activity.volunteers.length} / {activity.volunteersNeeded || 'Unlimited'}</span>
         </div>
+        {activity.leaderEmail && (
+          <div className="flex items-center text-gray-700">
+            <span className="font-semibold mr-2">👑 Leader:</span>
+            <span>{activity.leaderEmail}</span>
+          </div>
+        )}
       </div>
       
       {showJoinButton && isVolunteer && (

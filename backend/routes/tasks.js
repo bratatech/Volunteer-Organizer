@@ -1,6 +1,7 @@
 const express = require('express');
 const { readData, writeData } = require('../utils/fileHandler');
 const { authenticateToken } = require('../middleware/auth');
+const { sendTaskAssignmentEmail } = require('../utils/mailer');
 
 const router = express.Router();
 
@@ -60,6 +61,17 @@ router.post('/', authenticateToken, async (req, res) => {
     tasks.push(newTask);
     await writeData('tasks.json', tasks);
 
+    // Send email notification to the assigned volunteer (non-blocking)
+    if (assignedTo) {
+      sendTaskAssignmentEmail(assignedTo, {
+        title,
+        description,
+        deadline,
+        priority,
+        organizerEmail: req.user.email,
+      });
+    }
+
     res.status(201).json(newTask);
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
@@ -98,6 +110,16 @@ router.patch('/:id/assign', authenticateToken, async (req, res) => {
     tasks[taskIndex].status = 'assigned';
 
     await writeData('tasks.json', tasks);
+
+    // Send email notification to the assigned volunteer (non-blocking)
+    const task = tasks[taskIndex];
+    sendTaskAssignmentEmail(email, {
+      title: task.title,
+      description: task.description,
+      deadline: task.deadline,
+      priority: task.priority,
+      organizerEmail: req.user.email,
+    });
 
     res.json({ message: `Task assigned to ${email}`, task: tasks[taskIndex] });
   } catch (error) {
