@@ -61,18 +61,27 @@ router.post('/', authenticateToken, async (req, res) => {
     tasks.push(newTask);
     await writeData('tasks.json', tasks);
 
-    // Send email notification to the assigned volunteer (non-blocking)
+    let emailSent = false;
+    let emailError = null;
+
+    // Send email notification to the assigned volunteer
     if (assignedTo) {
-      sendTaskAssignmentEmail(assignedTo, {
-        title,
-        description,
-        deadline,
-        priority,
-        organizerEmail: req.user.email,
-      });
+      try {
+        await sendTaskAssignmentEmail(assignedTo, {
+          title,
+          description,
+          deadline,
+          priority,
+          organizerEmail: req.user.email,
+        });
+        emailSent = true;
+      } catch (error) {
+        emailError = error.message;
+        console.error(`Failed to send assignment email to ${assignedTo}:`, error.message);
+      }
     }
 
-    res.status(201).json(newTask);
+    res.status(201).json({ ...newTask, emailSent, emailError });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
@@ -111,17 +120,26 @@ router.patch('/:id/assign', authenticateToken, async (req, res) => {
 
     await writeData('tasks.json', tasks);
 
-    // Send email notification to the assigned volunteer (non-blocking)
-    const task = tasks[taskIndex];
-    sendTaskAssignmentEmail(email, {
-      title: task.title,
-      description: task.description,
-      deadline: task.deadline,
-      priority: task.priority,
-      organizerEmail: req.user.email,
-    });
+    let emailSent = false;
+    let emailError = null;
 
-    res.json({ message: `Task assigned to ${email}`, task: tasks[taskIndex] });
+    // Send email notification to the assigned volunteer
+    const task = tasks[taskIndex];
+    try {
+      await sendTaskAssignmentEmail(email, {
+        title: task.title,
+        description: task.description,
+        deadline: task.deadline,
+        priority: task.priority,
+        organizerEmail: req.user.email,
+      });
+      emailSent = true;
+    } catch (error) {
+      emailError = error.message;
+      console.error(`Failed to send assignment email to ${email}:`, error.message);
+    }
+
+    res.json({ message: `Task assigned to ${email}`, task: tasks[taskIndex], emailSent, emailError });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }

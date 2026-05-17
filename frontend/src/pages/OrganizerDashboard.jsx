@@ -87,11 +87,15 @@ const OrganizerDashboard = ({ user, onLogout }) => {
   const handleTaskSubmit = async (e) => {
     e.preventDefault();
     try {
-      await createTask({
+      const response = await createTask({
         ...taskForm,
         assignedTo: taskForm.assignedTo || null
       });
-      alert('Task created successfully!');
+      if (taskForm.assignedTo && response.data.emailSent === false) {
+        alert(`Task created, but the email could not be sent: ${response.data.emailError}`);
+      } else {
+        alert('Task created successfully!');
+      }
       setShowTaskForm(false);
       setTaskForm({
         title: '',
@@ -113,8 +117,12 @@ const OrganizerDashboard = ({ user, onLogout }) => {
       return;
     }
     try {
-      await assignTask(taskId, email.trim());
-      alert(`Task assigned to ${email}`);
+      const response = await assignTask(taskId, email.trim());
+      if (response.data.emailSent === false) {
+        alert(`Task assigned to ${email}, but the email could not be sent: ${response.data.emailError}`);
+      } else {
+        alert(`Task assigned to ${email} and email sent`);
+      }
       setAssignEmails({ ...assignEmails, [taskId]: '' });
       fetchData();
     } catch (error) {
