@@ -1,1 +1,16 @@
-[]
+[
+  {
+    "id": "1779123305444",
+    "email": "soumyabrata.chakraborty.cse28@heritageit.edu.in",
+    "password": "$2b$10$pTuG5J39TFaxcYn9cAfrnOGBio.eM8JMSmHsySVHTiRJLMJenSaOC",
+    "rollNo": "2451173",
+    "phoneNo": "9330636536",
+    "role": "volunteer",
+    "createdAt": "2026-05-18T16:55:05.444Z",
+    "skills": [],
+    "interests": [],
+    "socialHandles": {},
+    "badges": [],
+    "activities": []
+  }
+]

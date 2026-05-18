@@ -1,1 +1,12 @@
-[]
+[
+  {
+    "id": "1779124151600",
+    "email": "soumyachakraborty802@gmail.com",
+    "password": "$2b$10$w2G0c6Qa7NgxRCv7Q/.ORekp9ER8uaDQnh//8iNPCG8gPwQudV5oO",
+    "role": "organizer",
+    "createdAt": "2026-05-18T17:09:11.600Z",
+    "eventsCreated": [
+      "1779124489635"
+    ]
+  }
+]
