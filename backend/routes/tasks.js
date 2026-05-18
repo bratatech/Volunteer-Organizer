@@ -27,7 +27,7 @@ router.post('/', authenticateToken, async (req, res) => {
       return res.status(403).json({ message: 'Only organizers can create tasks' });
     }
 
-    const { title, description, deadline, priority, assignedTo } = req.body;
+    const { title, description, deadline, priority, assignedTo, activityId } = req.body;
 
     if (!title || !description) {
       return res.status(400).json({ message: 'Title and description are required' });
@@ -44,7 +44,8 @@ router.post('/', authenticateToken, async (req, res) => {
       organizerId: req.user.id,
       assignedTo: assignedTo || null,
       status: assignedTo ? 'assigned' : 'unassigned',
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
+      activityId: activityId || null
     };
 
     // If assigned to someone by email, validate the volunteer exists
@@ -205,6 +206,98 @@ router.get('/my-tasks', authenticateToken, async (req, res) => {
     const myTasks = tasks.filter(t => t.assignedVolunteerId === req.user.id);
     res.json(myTasks);
   } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// Toggle Task Completion and check badges (Volunteer or Organizer)
+router.patch('/:id/status', authenticateToken, async (req, res) => {
+  try {
+    const tasks = await readData('tasks.json');
+    const taskIndex = tasks.findIndex(t => t.id === req.params.id);
+
+    if (taskIndex === -1) {
+      return res.status(404).json({ message: 'Task not found' });
+    }
+
+    const task = tasks[taskIndex];
+
+    // Check authorization: only the assigned volunteer or the organizer who created it can modify it
+    if (req.user.role === 'volunteer' && task.assignedVolunteerId !== req.user.id) {
+      return res.status(403).json({ message: 'You are not assigned to this task' });
+    }
+    if (req.user.role === 'organizer' && task.organizerId !== req.user.id) {
+      return res.status(403).json({ message: 'You did not create this task' });
+    }
+
+    // Toggle completed state
+    task.completed = !task.completed;
+    tasks[taskIndex] = task;
+    await writeData('tasks.json', tasks);
+
+    let earnedBadges = [];
+    // If completed is true, run the badge logic
+    if (task.completed && task.assignedVolunteerId) {
+      const volunteers = await readData('volunteers.json');
+      const volunteerIndex = volunteers.findIndex(v => v.id === task.assignedVolunteerId);
+      
+      if (volunteerIndex !== -1) {
+        const volunteer = volunteers[volunteerIndex];
+        const completedTasksCount = tasks.filter(t => t.assignedVolunteerId === volunteer.id && t.completed).length;
+
+        volunteer.badges = volunteer.badges || [];
+        
+        if (completedTasksCount >= 1 && !volunteer.badges.includes('First Step')) {
+          volunteer.badges.push('First Step');
+        }
+        if (completedTasksCount >= 3 && !volunteer.badges.includes('Task Master')) {
+          volunteer.badges.push('Task Master');
+        }
+        if (completedTasksCount >= 5 && !volunteer.badges.includes('Elite Volunteer')) {
+          volunteer.badges.push('Elite Volunteer');
+        }
+
+        earnedBadges = volunteer.badges;
+        await writeData('volunteers.json', volunteers);
+      }
+    }
+
+    res.json({ message: 'Task status updated', task, badges: earnedBadges });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// Claim/apply for an unassigned task (Volunteer only)
+router.post('/:id/claim', authenticateToken, async (req, res) => {
+  try {
+    if (req.user.role !== 'volunteer') {
+      return res.status(403).json({ message: 'Only volunteers can claim tasks' });
+    }
+
+    const tasks = await readData('tasks.json');
+    const taskIndex = tasks.findIndex(t => t.id === req.params.id);
+
+    if (taskIndex === -1) {
+      return res.status(404).json({ message: 'Task not found' });
+    }
+
+    const task = tasks[taskIndex];
+
+    if (task.assignedTo || task.assignedVolunteerId) {
+      return res.status(400).json({ message: 'Task is already assigned to someone else' });
+    }
+
+    // Assign the task to this volunteer
+    task.assignedTo = req.user.email;
+    task.assignedVolunteerId = req.user.id;
+    task.status = 'assigned';
+    tasks[taskIndex] = task;
+    await writeData('tasks.json', tasks);
+
+    res.json({ message: 'Successfully registered for this task!', task });
+  } catch (error) {
+    console.error('Error claiming task:', error.stack || error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 });

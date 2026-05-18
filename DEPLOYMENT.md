@@ -1,175 +1,102 @@
-# 🚀 Deployment Guide for Vercel
+# 🚀 Deployment & Local Operations Guide - FestOps (2026)
 
-## ✅ Changes Made for Vercel Deployment
+This document provides guidelines for deploying the **FestOps** portal to production cloud hosts (like Vercel and Netlify) and starting up local development nodes.
 
-### 1. **Frontend API Configuration** (`frontend/src/utils/api.js`)
-- Changed from hardcoded `http://localhost:5000/api` to environment-based URL
-- Uses `VITE_API_BASE_URL` environment variable
-- Defaults to `/api` for production (relative path)
+---
 
-### 2. **Environment Files Created**
-- **`.env.development`**: Uses `http://localhost:5000/api` for local development
-- **`.env.production`**: Uses `/api` for production (relative path)
+## 🛠️ Local Development & Quick Start
 
-### 3. **Backend Server** (`backend/server.js`)
-- Modified to support both local development and Vercel serverless
-- Only calls `app.listen()` when not in Vercel environment
-- Exports the Express app for serverless deployment
+Our project provides simplified batch launch scripts and self-healing data routines to get you running in seconds.
 
-### 4. **Vercel Serverless Entry Point** (`api/index.js`)
-- Created new serverless entry point for Vercel
-- Imports and configures all backend routes
-- Exports Express app for Vercel's Node.js runtime
+### 1. Prerequisites
+- **Node.js**: v18.0.0 or higher.
+- **Git**: Installed and configured.
 
-### 5. **File Storage** (`backend/utils/fileHandler.js`)
-- Updated to use `/tmp` directory on Vercel (serverless writable location)
-- Automatically creates data directory if it doesn't exist
-- Falls back to local `data/` directory for development
-
-### 6. **Vercel Configuration** (`vercel.json`)
-- Configured to build frontend as static site
-- Routes `/api/*` requests to serverless backend
-- Routes all other requests to frontend
-
-## 📋 Deployment Steps
-
-### Option 1: Deploy via Vercel Dashboard (Recommended)
-
-1. **Push your code to GitHub:**
-   ```bash
-   git add .
-   git commit -m "Configure for Vercel deployment"
-   git push origin main
-   ```
-
-2. **Import to Vercel:**
-   - Go to [vercel.com](https://vercel.com)
-   - Click "Add New Project"
-   - Import your GitHub repository
-   - Vercel will auto-detect the configuration
-
-3. **Configure Environment Variables (if needed):**
-   - In Vercel dashboard, go to Project Settings → Environment Variables
-   - Add `JWT_SECRET` with a secure value
-   - Add any other backend environment variables from `backend/.env`
-
-4. **Deploy:**
-   - Click "Deploy"
-   - Wait for build to complete
-   - Your app will be live at `your-project.vercel.app`
-
-### Option 2: Deploy via Vercel CLI
-
-1. **Install Vercel CLI:**
-   ```bash
-   npm install -g vercel
-   ```
-
-2. **Login to Vercel:**
-   ```bash
-   vercel login
-   ```
-
-3. **Deploy:**
-   ```bash
-   vercel
-   ```
-
-4. **For production deployment:**
-   ```bash
-   vercel --prod
-   ```
-
-## 🔧 Environment Variables for Vercel
-
-Add these in Vercel Dashboard → Project Settings → Environment Variables:
-
-| Variable | Value | Environment |
-|----------|-------|-------------|
-| `JWT_SECRET` | Your secure secret key | Production |
-| `NODE_ENV` | `production` | Production |
-
-## ✅ Verification Checklist
-
-After deployment, verify:
-
-- [ ] Frontend loads at `https://your-project.vercel.app`
-- [ ] Health check works: `https://your-project.vercel.app/api/health`
-- [ ] Volunteer signup works
-- [ ] Volunteer login works
-- [ ] Organizer signup works
-- [ ] Organizer login works
-- [ ] Dashboard loads after login
-- [ ] Activities can be created (organizer)
-- [ ] Activities can be joined (volunteer)
-
-## 🐛 Troubleshooting
-
-### Issue: API calls return 404
-**Solution:** Check that `vercel.json` is properly configured and routes are correct.
-
-### Issue: CORS errors
-**Solution:** Backend already has CORS enabled. If issues persist, check Vercel logs.
-
-### Issue: Data not persisting
-**Note:** Vercel serverless functions use `/tmp` which is ephemeral. For production, consider:
-- Using a database (MongoDB, PostgreSQL, etc.)
-- Using Vercel KV or other persistent storage
-- Current setup works but data resets on cold starts
-
-### Issue: Environment variables not working
-**Solution:** 
-- Ensure variables are set in Vercel dashboard
-- Redeploy after adding variables
-- Check variable names match exactly
-
-## 📊 Local Development Still Works
-
-The changes maintain full local development support:
-
-1. **Start backend:**
-   ```bash
-   cd backend
-   npm start
-   ```
-
-2. **Start frontend:**
-   ```bash
-   cd frontend
-   npm run dev
-   ```
-
-3. **Access locally:**
-   - Frontend: `http://localhost:3000`
-   - Backend: `http://localhost:5000`
-   - Vite proxy handles API routing in development
-
-## 🔄 Updating Your Deployment
-
-To update your deployed app:
-
-```bash
-git add .
-git commit -m "Your update message"
-git push origin main
+### 2. Environment Variables
+Create a file named `.env` inside the `backend/` directory:
+```env
+PORT=5000
+JWT_SECRET=your_secure_2026_jwt_secret_key_change_in_production
+GEMINI_API_KEY=your_google_gemini_api_key_here
+NODE_ENV=development
 ```
+> [!NOTE]
+> Never commit `.env` files to git repositories.
 
-Vercel will automatically redeploy on push to main branch.
+### 3. Startup Scripts (Local)
+You can launch both server processes simultaneously or use our quick-start helpers:
 
-## 📝 Important Notes
+- **Start backend (Express + WebSockets)**:
+  ```bash
+  cd backend
+  npm install
+  npm start
+  ```
+- **Start frontend (Vite client)**:
+  ```bash
+  cd frontend
+  npm install
+  npm run dev
+  ```
+- **Access Points**:
+  - Client workspace: `http://localhost:3000`
+  - Backend server API: `http://localhost:5000`
 
-1. **Data Persistence:** Current JSON file storage is ephemeral on Vercel. Consider migrating to a database for production use.
+---
 
-2. **Cold Starts:** Serverless functions may have cold start delays. First request after inactivity might be slower.
+## ☁️ Production Deployment on Vercel
 
-3. **File Uploads:** If you add file upload features, use Vercel Blob or external storage (S3, Cloudinary, etc.)
+The **FestOps** architecture supports serverless deployments on Vercel out-of-the-box.
 
-4. **Environment Variables:** Never commit `.env` files. Always use Vercel dashboard for production secrets.
+### 1. Unified Configuration (`vercel.json`)
+The root workspace includes a custom `vercel.json` file configuring the static asset routing and mapping api routers to Serverless Node.js functions:
+- Static build output directory set to `frontend/dist`.
+- Directing `/api/*` and WebSocket sockets to `/api/index.js` serverless gateway.
+- Relative API base urls parsed using `.env.production` definitions.
 
-## 🎉 Success!
+### 2. Ephemeral Data Considerations
+Vercel serverless containers are stateless. The self-healing file utilities map `readData` and `writeData` requests to the writeable `/tmp` storage path automatically on Vercel cold starts.
+- **Tip**: For high-volume production use cases, it is recommended to replace the [fileHandler.js](file:///d:/Semestar%204/DIT%20Lab/Volunteer-Organizer/backend/utils/fileHandler.js) functions with a persistent relational database like PostgreSQL or MongoDB.
 
-Your app should now be fully functional at:
-- **Production:** `https://fest-connect-virid.vercel.app`
-- **Local:** `http://localhost:3000`
+### 3. Deploying Steps
+1. **GitHub Import**:
+   - Navigate to the [Vercel Dashboard](https://vercel.com).
+   - Select "Add New Project" and import your `Volunteer-Organizer` repository.
+2. **Environment Variables**:
+   - Add `JWT_SECRET` (secure random string) and `GEMINI_API_KEY` (official Google developer token) inside Project Settings.
+3. **Trigger Build**:
+   - Vercel automatically reads workspace packages and deploys the production bundle.
 
-Both environments work seamlessly with the same codebase!
+---
+
+## ⚡ Deployment Checklist & Verification Tests
+
+After launching the live URL, verify the following core features:
+
+1. **API Health check**: Navigate to `https://your-domain.vercel.app/api/health` to confirm the backend responded with `status: "OK"`.
+2. **Institutional Signup**: Create a Volunteer account using a valid college domain email.
+3. **Discovery Board**: Navigate to the left panel and click `"Apply"` on an event to verify the yellow optimistic badge displays.
+4. **Contextual Checklists**: (Organizer) Create a task mapped to your event. (Volunteer) Click checkbox inside the event card to verify experience points and badge upgrades.
+5. **Real-time Chats**: Verify the Socket chatbox opens and persists messages.
+6. **PDF Certificate Download**: Conclude the event as an organizer, click `"Download PDF"` on the volunteer card vault, and verify that the A4 landscap sheet streams correctly to your local downloads folder.
+7. **AI suggestions**: Request recommendations on the volunteer panel to check Gemini JSON parses cleanly.
+
+---
+
+## 🐛 Troubleshooting Common Issues
+
+### 1. "SecretOrPrivateKey must have a value" error on login
+- **Cause**: The server is unable to load your local `JWT_SECRET` value.
+- **Solution**: Ensure your `backend/.env` file is present in your local folder and your cloud environment variables are configured in your Vercel/Netlify dashboard.
+
+### 2. "Gemini API key is not configured" on recommendations
+- **Cause**: The `GEMINI_API_KEY` environment parameter is missing.
+- **Solution**: Set a valid key from Google AI Studio in your `.env` or cloud portal.
+
+### 3. Deletions do not reflect instantly
+- **Cause**: Client arrays are not being correctly filtered in the React local state hooks.
+- **Solution**: Verify that your action triggers invoke `.filter(item => item.id !== targetId)` inside dashboard update hooks.
+
+### 4. PDF download opens a new window with error
+- **Cause**: The backend was unable to find matching certifications array elements inside `volunteers.json` for the requested ID.
+- **Solution**: Ensure you are using the correct generated key (e.g. `CERT-XXXXYYYY`) as the parameter.

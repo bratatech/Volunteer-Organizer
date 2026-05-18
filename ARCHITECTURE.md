@@ -1,395 +1,217 @@
-# 🏛️ System Architecture
+# 🏛️ System Architecture - FestOps (2026)
 
-## 📊 High-Level Architecture
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                        CLIENT BROWSER                        │
-│                     (http://localhost:3000)                  │
-└───────────────────────────┬─────────────────────────────────┘
-                            │
-                            │ HTTP Requests
-                            │
-┌───────────────────────────▼─────────────────────────────────┐
-│                    REACT FRONTEND (Vite)                     │
-│  ┌─────────────────────────────────────────────────────┐   │
-│  │  App.jsx (React Router)                             │   │
-│  │  ├── Landing Page                                   │   │
-│  │  ├── Volunteer Routes                               │   │
-│  │  │   ├── Signup                                     │   │
-│  │  │   ├── Login                                      │   │
-│  │  │   └── Dashboard                                  │   │
-│  │  └── Organizer Routes                               │   │
-│  │      ├── Signup                                     │   │
-│  │      ├── Login                                      │   │
-│  │      └── Dashboard                                  │   │
-│  └─────────────────────────────────────────────────────┘   │
-│                            │                                 │
-│  ┌─────────────────────────▼─────────────────────────┐     │
-│  │  API Utils (Axios)                                 │     │
-│  │  - Authentication APIs                             │     │
-│  │  - Activity APIs                                   │     │
-│  │  - JWT Token Management                            │     │
-│  └─────────────────────────────────────────────────────┘   │
-└───────────────────────────┬─────────────────────────────────┘
-                            │
-                            │ REST API Calls
-                            │ (http://localhost:5000/api)
-                            │
-┌───────────────────────────▼─────────────────────────────────┐
-│                   EXPRESS.JS BACKEND                         │
-│  ┌─────────────────────────────────────────────────────┐   │
-│  │  server.js                                          │   │
-│  │  ├── CORS Middleware                                │   │
-│  │  ├── JSON Parser                                    │   │
-│  │  └── Route Handlers                                 │   │
-│  └─────────────────────────────────────────────────────┘   │
-│                            │                                 │
-│  ┌─────────────────────────▼─────────────────────────┐     │
-│  │  Routes                                            │     │
-│  │  ├── /api/auth/*                                   │     │
-│  │  │   ├── POST /volunteer/signup                    │     │
-│  │  │   ├── POST /volunteer/login                     │     │
-│  │  │   ├── POST /organizer/signup                    │     │
-│  │  │   └── POST /organizer/login                     │     │
-│  │  │                                                  │     │
-│  │  └── /api/activities/*                             │     │
-│  │      ├── GET /                                      │     │
-│  │      ├── GET /my-activities                        │     │
-│  │      ├── POST /                                     │     │
-│  │      └── POST /:id/join                            │     │
-│  └─────────────────────────────────────────────────────┘   │
-│                            │                                 │
-│  ┌─────────────────────────▼─────────────────────────┐     │
-│  │  Middleware                                        │     │
-│  │  ├── authenticateToken (JWT Verification)          │     │
-│  │  └── authorizeRole (Role-based Access)             │     │
-│  └─────────────────────────────────────────────────────┘   │
-│                            │                                 │
-│  ┌─────────────────────────▼─────────────────────────┐     │
-│  │  Utils                                             │     │
-│  │  ├── readData (Read JSON files)                    │     │
-│  │  └── writeData (Write JSON files)                  │     │
-│  └─────────────────────────────────────────────────────┘   │
-└───────────────────────────┬─────────────────────────────────┘
-                            │
-                            │ File I/O
-                            │
-┌───────────────────────────▼─────────────────────────────────┐
-│                    JSON DATABASE (File System)               │
-│  ┌─────────────────────────────────────────────────────┐   │
-│  │  data/                                              │   │
-│  │  ├── volunteers.json                                │   │
-│  │  ├── organizers.json                                │   │
-│  │  └── activities.json                                │   │
-│  └─────────────────────────────────────────────────────┘   │
-└─────────────────────────────────────────────────────────────┘
-```
-
-## 🔄 Data Flow Diagrams
-
-### 1. Volunteer Registration Flow
+## 📊 High-Level Component Topology
 
 ```
-User (Browser)
-    │
-    │ 1. Fill signup form
-    │    (email, password, rollNo, phoneNo)
-    ▼
-VolunteerSignup.jsx
-    │
-    │ 2. POST /api/auth/volunteer/signup
-    ▼
-Backend: auth.js
-    │
-    │ 3. Validate input
-    │ 4. Check if email exists
-    │ 5. Hash password (bcrypt)
-    │ 6. Create volunteer object
-    ▼
-fileHandler.js
-    │
-    │ 7. Read volunteers.json
-    │ 8. Add new volunteer
-    │ 9. Write to volunteers.json
-    ▼
-volunteers.json (Updated)
-    │
-    │ 10. Success response
-    ▼
-User redirected to login
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                            CLIENT BROWSER (React)                           │
+│                            (http://localhost:3000)                          │
+│                                                                             │
+│    ┌───────────────┐     ┌──────────────┐     ┌──────────────┐     ┌───┐    │
+│    │  Dashboards   │     │ Opportunity  │     │ Credentials  │     │ C │    │
+│    │  (Vol/Org)    │     │ Board (Tabs) │     │ Vault (PDFs) │     │ h │    │
+│    └───────┬───────┘     └──────┬───────┘     └──────┬───────┘     │ a │    │
+│            │                    │                    │           │ t │    │
+│            └────────────────────┼────────────────────┼───────────►   ◄────┤
+│                                 │                    │           └───┘    │
+│                                 ▼                    │             ▲      │
+│                            Axios Hooks               │             │      │
+│                      (api.js - JWT Headers)          │             │      │
+└─────────────────────────────────┬────────────────────┼─────────────┼──────┘
+                                  │                    │             │
+                             REST │                    │ GET         │ Socket.io
+                             APIs │                    │ /download   │ Websockets
+                                  ▼                    ▼             ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                            EXPRESS.JS BACKEND                               │
+│                            (http://localhost:5000)                          │
+│                                                                             │
+│    ┌─────────────────┐ ┌──────────────────┐ ┌────────────────┐ ┌─────────┐  │
+│    │ auth.js (JWT)   │ │ activities.js    │ │ chat.js (Logs) │ │ Socket  │  │
+│    └────────┬────────┘ └────────┬─────────┘ └───────┬────────┘ │ Gateway │  │
+│             │                   │                   │          └────┬────┘  │
+│             │                   ▼                   │               │       │
+│             │            ┌──────────────┐           │               │       │
+│             │            │  tasks.js    │           │               │       │
+│             │            └──────┬───────┘           │               │       │
+│             ▼                   ▼                   ▼               ▼       │
+│      ┌─────────────┐     ┌──────────────┐    ┌─────────────┐ ┌───────────┐  │
+│      │ ai.js       │     │ certificates │    │ fileHandler │ │ socket.io │  │
+│      │ (Gemini AI) │     │ (pdfkit A4)  │    │ (I/O Safe)  │ │   Rooms   │  │
+│      └──────┬──────┘     └──────┬───────┘    └──────┬──────┘ └─────┬─────┘  │
+└─────────────┼───────────────────┼───────────────────┼──────────────┼────────┘
+              │                   │                   │              │
+              │                   │                   ▼ File I/O     │
+              │                   │            ┌─────────────┐       │
+              │                   │            │ JSON Files  │       │
+              │                   │            │ volunteers  │       │
+              │                   │            │ activities  │◄──────┘
+              │                   │            │ tasks       │
+              └───────────────────┴───────────►│ messages    │
+                                               └─────────────┘
 ```
 
-### 2. Login & Authentication Flow
+---
+
+## 🔄 Technical Flow Diagrams
+
+### 1. Unified Real-Time Socket Chat Flow
 
 ```
-User (Browser)
-    │
-    │ 1. Enter credentials
-    ▼
-VolunteerLogin.jsx / OrganizerLogin.jsx
-    │
-    │ 2. POST /api/auth/volunteer/login
-    ▼
-Backend: auth.js
-    │
-    │ 3. Find user by email
-    │ 4. Compare password (bcrypt)
-    │ 5. Generate JWT token
-    │ 6. Return token + user data
-    ▼
-Frontend: api.js
-    │
-    │ 7. Store token in localStorage
-    │ 8. Store user data in localStorage
-    │ 9. Update App state
-    ▼
-User redirected to dashboard
-    │
-    │ All subsequent requests include:
-    │ Authorization: Bearer <token>
-    ▼
-Protected Routes (Dashboard)
+Volunteer (Approved)                      Socket.io Gateway                    JSON Database
+        │                                         │                                  │
+        │ 1. Mount Chatroom.jsx                   │                                  │
+        │ 2. emit("joinRoom", { activityId })     │                                  │
+        ├────────────────────────────────────────►│                                  │
+        │                                         │ 3. Bind to Room ID               │
+        │                                         │                                  │
+        │ 4. Type & Send Message                  │                                  │
+        ├────────────────────────────────────────►│                                  │
+        │                                         │ 5. readData("messages.json")     │
+        │                                         │ 6. Push message context          │
+        │                                         │ 7. writeData("messages.json")    │
+        │                                         │─────────────────────────────────►│
+        │                                         │                                  │
+        │                                         │ 8. Broadcast to Room Members     │
+        │                                         │    emit("newMessage")            │
+        │◄────────────────────────────────────────│                                  │
 ```
 
-### 3. Activity Creation Flow (Organizer)
+### 2. Automated High-Fidelity PDF Certificate Download Flow
 
 ```
-Organizer (Dashboard)
-    │
-    │ 1. Click "Create Activity"
-    │ 2. Fill form (title, description, date, etc.)
-    ▼
-OrganizerDashboard.jsx
-    │
-    │ 3. POST /api/activities
-    │    Headers: Authorization: Bearer <token>
-    ▼
-Backend: activities.js
-    │
-    │ 4. authenticateToken middleware
-    │    - Verify JWT
-    │    - Extract user info
-    │
-    │ 5. Check if user is organizer
-    │ 6. Create activity object
-    ▼
-fileHandler.js
-    │
-    │ 7. Read activities.json
-    │ 8. Add new activity
-    │ 9. Write to activities.json
-    │
-    │ 10. Update organizer's eventsCreated
-    ▼
-activities.json & organizers.json (Updated)
-    │
-    │ 11. Return new activity
-    ▼
-Dashboard refreshes with new activity
+Volunteer (Vault)                       certificates.js (GET)                   PDFKit Engine
+        │                                         │                                  │
+        │ 1. Click "Download PDF"                 │                                  │
+        ├────────────────────────────────────────►│                                  │
+        │                                         │ 2. Find volunteer & cert ID      │
+        │                                         │ 3. Parse student name & role     │
+        │                                         │ 4. Instantiate PDFDocument       │
+        │                                         ├─────────────────────────────────►│
+        │                                         │                                  │
+        │                                         │ 5. Draw Borders & Corner Brackets│
+        │                                         │ 6. Fill Gold Star Accent Graphic │
+        │                                         │ 7. Add Underlined Student Name   │
+        │                                         │ 8. Render Verified Stamp Seal    │
+        │                                         │◄─────────────────────────────────┤
+        │                                         │                                  │
+        │                                         │ 9. Set HTTP Headers:             │
+        │                                         │    Content-Type: application/pdf │
+        │                                         │ 10. Pipe doc stream directly     │
+        │◄────────────────────────────────────────│                                  │
+│ Stream complete / PDF saves successfully │
 ```
 
-### 4. Join Activity Flow (Volunteer)
+### 3. Structured JSON AI Recommendations Flow
 
 ```
-Volunteer (Dashboard)
-    │
-    │ 1. Browse available activities
-    │ 2. Click "Join Activity"
-    ▼
-VolunteerDashboard.jsx
-    │
-    │ 3. POST /api/activities/:id/join
-    │    Headers: Authorization: Bearer <token>
-    ▼
-Backend: activities.js
-    │
-    │ 4. authenticateToken middleware
-    │ 5. Check if user is volunteer
-    │ 6. Find activity by ID
-    │ 7. Check if already joined
-    │ 8. Add volunteer ID to activity
-    ▼
-fileHandler.js
-    │
-    │ 9. Update activities.json
-    │ 10. Update volunteers.json
-    ▼
-Both files updated
-    │
-    │ 11. Return success
-    ▼
-Dashboard refreshes
-    │
-    │ Activity moves from "Available"
-    │ to "My Activities" tab
-    ▼
-Updated UI
+Volunteer (Dashboard)                        ai.js (GET)                        Gemini SDK
+        │                                         │                                  │
+        │ 1. Click "Get AI Recommendations"       │                                  │
+        ├────────────────────────────────────────►│                                  │
+        │                                         │ 2. Fetch profile from JSON       │
+        │                                         │ 3. Filter "upcoming" fests       │
+        │                                         │ 4. Setup responseSchema OBJECT   │
+        │                                         ├─────────────────────────────────►│
+        │                                         │                                  │
+        │                                         │ 5. Align skills via model        │
+        │                                         │ 6. Populate activityId, title,   │
+        │                                         │    and aiReasoning fields        │
+        │                                         │◄─────────────────────────────────┤
+        │                                         │                                  │
+        │                                         │ 7. Parse response string         │
+        │◄────────────────────────────────────────│                                  │
+│ Renders premium suggestions cards grid │
 ```
 
-## 🔐 Security Architecture
+---
 
-```
-┌─────────────────────────────────────────────────────────┐
-│                    SECURITY LAYERS                       │
-├─────────────────────────────────────────────────────────┤
-│                                                          │
-│  Layer 1: Input Validation                              │
-│  ├── Frontend form validation                           │
-│  ├── Required field checks                              │
-│  └── Email format validation                            │
-│                                                          │
-│  Layer 2: Password Security                             │
-│  ├── Minimum length requirement (6 chars)               │
-│  ├── Bcrypt hashing (10 salt rounds)                    │
-│  └── No plain text storage                              │
-│                                                          │
-│  Layer 3: Authentication                                │
-│  ├── JWT token generation                               │
-│  ├── Token expiration (24 hours)                        │
-│  ├── Token stored in localStorage                       │
-│  └── Token sent in Authorization header                 │
-│                                                          │
-│  Layer 4: Authorization                                 │
-│  ├── authenticateToken middleware                       │
-│  ├── Role-based access control                          │
-│  ├── Volunteer-only endpoints                           │
-│  └── Organizer-only endpoints                           │
-│                                                          │
-│  Layer 5: Route Protection                              │
-│  ├── Protected frontend routes                          │
-│  ├── Redirect if not authenticated                      │
-│  └── Role-specific redirects                            │
-│                                                          │
-└─────────────────────────────────────────────────────────┘
-```
+## 🗄️ Unified Entity Relationship & JSON Databases
 
-## 📦 Component Hierarchy
+### 1. `volunteers.json` (Volunteer Schema)
+Holds volunteer profiles, status tracking indexes, earned digital credentials, and point scores:
+- `id` (String): Unique timestamp string.
+- `email` (String): Valid institutional email address.
+- `password` (String): Bcrypt hashed string.
+- `rollNo` (String): 2026 format student roll number (`CS2026XXX`).
+- `phoneNo` (String): Phone string.
+- `skills` (Array): Custom tags added via `<SkillBuilder />`.
+- `interests` (Array): Event type alignment categories.
+- `activities` (Array): Event application arrays containing `{ activityId, status: "pending" | "approved" | "rejected" }`.
+- `certifications` (Array): Credentials awarded: `{ id, activityId, activityName, role, dateIssued, issuingOrganizer }`.
+- `points` (Number): Dynamic gamified activity score.
+- `badges` (Array): Dynamic accolade titles.
 
-```
-App.jsx
-│
-├── Router
-│   │
-│   ├── Landing.jsx (Public)
-│   │
-│   ├── Volunteer Routes
-│   │   ├── VolunteerSignup.jsx (Public)
-│   │   ├── VolunteerLogin.jsx (Public)
-│   │   │   └── Uses: api.js → volunteerLogin()
-│   │   │
-│   │   └── VolunteerDashboard.jsx (Protected)
-│   │       ├── Navbar.jsx
-│   │       ├── StatsCard.jsx (x3)
-│   │       └── ActivityCard.jsx (multiple)
-│   │           └── Uses: api.js → getAllActivities()
-│   │                              getMyActivities()
-│   │                              joinActivity()
-│   │
-│   └── Organizer Routes
-│       ├── OrganizerSignup.jsx (Public)
-│       ├── OrganizerLogin.jsx (Public)
-│       │   └── Uses: api.js → organizerLogin()
-│       │
-│       └── OrganizerDashboard.jsx (Protected)
-│           ├── Navbar.jsx
-│           ├── StatsCard.jsx (x3)
-│           ├── Create Activity Form
-│           │   └── Uses: api.js → createActivity()
-│           │
-│           └── ActivityCard.jsx (multiple)
-│               └── Uses: api.js → getMyActivities()
-│
-└── Global State
-    ├── user (from localStorage)
-    └── token (from localStorage)
-```
+### 2. `activities.json` (Fests Activity Schema)
+Represents fests events created by coordinators:
+- `id` (String): Unique event ID.
+- `title` (String): Activity title.
+- `description` (String): Description context.
+- `date` (String): Date context calibrated to 2026 fests cycles.
+- `location` (String): Location venue.
+- `volunteersNeeded` (Number): Maximum workforce slots.
+- `organizerId` (String): Creator organizer key.
+- `status` (String): `"upcoming" | "ended"`.
+- `volunteers` (Array): Registered volunteers list: `{ volunteerId, status: "pending" | "approved" | "rejected", taskId }`.
 
-## 🗄️ Database Schema
+### 3. `tasks.json` (Checklists Schema)
+Stores micro-tasks contextually mapped inside events:
+- `id` (String): Unique task key.
+- `activityId` (String): Contextual parent event ID.
+- `title` (String): Task title.
+- `description` (String): Description.
+- `assignedTo` (String): Target volunteer ID (null if unassigned).
+- `status` (String): `"unassigned" | "assigned" | "completed"`.
+- `points` (Number): Experience points awarded on completion.
 
-```
-volunteers.json
-[
-  {
-    id: string (timestamp)
-    email: string (unique)
-    password: string (hashed)
-    rollNo: string
-    phoneNo: string
-    role: "volunteer"
-    createdAt: ISO timestamp
-    activities: [activity_ids]
-  }
-]
+---
 
-organizers.json
-[
-  {
-    id: string (timestamp)
-    email: string (unique)
-    password: string (hashed)
-    role: "organizer"
-    createdAt: ISO timestamp
-    eventsCreated: [activity_ids]
-  }
-]
+## 🔌 API Route Hierarchy
 
-activities.json
-[
-  {
-    id: string (timestamp)
-    title: string
-    description: string
-    date: ISO timestamp
-    location: string
-    volunteersNeeded: number
-    organizerId: string
-    volunteers: [volunteer_ids]
-    status: "upcoming" | "completed"
-    createdAt: ISO timestamp
-  }
-]
-```
+### Auth Gateway
+- `/api/auth`
+  - `POST /volunteer/signup` -> Register volunteer
+  - `POST /volunteer/login` -> Authenticate volunteer
+  - `PUT /volunteer/profile` -> Update skills & socials profile
+  - `POST /organizer/signup` -> Register organizer
+  - `POST /organizer/login` -> Authenticate organizer
 
-## 🎨 UI Component Structure
+### Fests Operations
+- `/api/activities`
+  - `GET /` -> List all activities (Auto-embeds matching tasks)
+  - `GET /explore` -> List upcoming unapplied events and open tasks
+  - `GET /my-activities` -> List joined events
+  - `POST /` -> Create event (Organizer only)
+  - `POST /:id/apply` -> Join activity or apply for specific tasks
+  - `PATCH /:id/applications/:volunteerId` -> Coordinator recruitment decisions (`approve` / `reject`)
+  - `POST /:id/conclude` -> Conclude fest and issue credentials
+  - `DELETE /:id` -> Destructive cascade deletion (Wipes tasks, chats, and references)
 
-```
-┌─────────────────────────────────────────────────────────┐
-│                        Navbar                            │
-│  Logo | User Email | Role Badge | Logout Button         │
-└─────────────────────────────────────────────────────────┘
+### Tasks Operations
+- `/api/tasks`
+  - `POST /` -> Create task (Organizer only)
+  - `PATCH /:id/status` -> Toggle status & evaluate badges
+  - `POST /:id/claim` -> Instant volunteer task self-assignment
+  - `DELETE /:id` -> Purge task
 
-┌─────────────────────────────────────────────────────────┐
-│                    Dashboard Header                      │
-│  Welcome Message | Action Button                        │
-└─────────────────────────────────────────────────────────┘
+### AI Advisor
+- `/api/ai`
+  - `GET /recommendations` -> Structured JSON Gemini recommenders
+  - `POST /skill-gap` -> Fast local skill gap analyzers
 
-┌──────────────┬──────────────┬──────────────────────────┐
-│  StatsCard   │  StatsCard   │  StatsCard               │
-│  Icon        │  Icon        │  Icon                    │
-│  Title       │  Title       │  Title                   │
-│  Value       │  Value       │  Value                   │
-└──────────────┴──────────────┴──────────────────────────┘
+### Real-Time Chat
+- `/api/chat`
+  - `GET /:activityId` -> Fetch room discussions log
 
-┌─────────────────────────────────────────────────────────┐
-│                    Profile Section                       │
-│  Email | Roll No | Phone | Role                         │
-└─────────────────────────────────────────────────────────┘
+### Programmatic Certificate Downloads
+- `/api/certificates`
+  - `GET /:certId/download` -> Stream A4 landscape pdfkit downloads
 
-┌─────────────────────────────────────────────────────────┐
-│                    Tab Navigation                        │
-│  Available Activities | My Activities                   │
-└─────────────────────────────────────────────────────────┘
+---
 
-┌──────────────┬──────────────┬──────────────────────────┐
-│ ActivityCard │ ActivityCard │ ActivityCard             │
-│ Title        │ Title        │ Title                    │
-│ Description  │ Description  │ Description              │
-│ Date         │ Date         │ Date                     │
-│ Location     │ Location     │ Location                 │
-│ Volunteers   │ Volunteers   │ Volunteers               │
-│ [Join Button]│ [Join Button]│ [Join Button]            │
-└──────────────┴──────────────┴──────────────────────────┘
-```
+## 🔐 Multi-Tier Security Specifications
 
-This architecture provides a clear, scalable foundation for the volunteer and organizer management system!
+1. **Role-Based Guards**: Every controller checks token payloads using the `authenticateToken` middleware and asserts `req.user.role` constraints.
+2. **Safe JSON Stream Handlers**: All reads and writes to files are guarded against corruption by `verifyAndInitializeDatabases` and try-catch fallback parsers inside [fileHandler.js](file:///d:/Semestar%204/DIT%20Lab/Volunteer-Organizer/backend/utils/fileHandler.js).
+3. **AI Guardrails**: Inputs are scanned by `containsInappropriateContent` to prevent prompt bypasses, and output generation utilizes strict type schema constraints directly inside Gemini SDK configurations.
+4. **Cascade Cleanup Integrity**: Deleting fests wipes matching data rows across all JSON files simultaneously, preventing dangling pointer/referential errors.

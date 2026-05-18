@@ -1,6 +1,7 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 const Landing = () => {
+  const navigate = useNavigate();
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-purple-50">
       {/* Hero Section */}
@@ -8,8 +9,8 @@ const Landing = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
           <div className="text-center">
             <h1 className="text-6xl font-extrabold text-gray-900 mb-6 animate-fade-in">
-              🎉 College Fest
-              <span className="block text-primary-600 mt-2">Volunteer Management</span>
+              🎉 FestOps
+              <span className="block text-primary-600 mt-2">Fest Volunteer Management & Certification Portal</span>
             </h1>
             <p className="text-xl text-gray-600 mb-12 max-w-3xl mx-auto">
               Join the most exciting college fest of the year! Whether you're a volunteer looking to contribute 
@@ -17,20 +18,18 @@ const Landing = () => {
             </p>
             
             <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
-              <div className="w-full sm:w-auto">
-                <Link to="/volunteer/signup" className="block w-full sm:w-auto">
-                  <button className="btn-primary w-full sm:w-auto text-lg px-8 py-4">
-                    Join as Volunteer 🙋‍♂️
-                  </button>
-                </Link>
-              </div>
-              <div className="w-full sm:w-auto">
-                <Link to="/organizer/signup" className="block w-full sm:w-auto">
-                  <button className="btn-secondary w-full sm:w-auto text-lg px-8 py-4">
-                    Register as Organizer 📋
-                  </button>
-                </Link>
-              </div>
+              <button 
+                onClick={() => navigate('/signup', { state: { role: 'volunteer' } })}
+                className="btn-primary w-full sm:w-auto text-lg px-8 py-4"
+              >
+                Join as Volunteer 🙋‍♂️
+              </button>
+              <button 
+                onClick={() => navigate('/signup', { state: { role: 'organizer' } })}
+                className="btn-secondary w-full sm:w-auto text-lg px-8 py-4"
+              >
+                Register as Organizer 📋
+              </button>
             </div>
           </div>
         </div>
@@ -79,16 +78,18 @@ const Landing = () => {
             Already have an account? Sign in now!
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link to="/volunteer/login">
-              <button className="bg-white text-primary-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors">
-                Volunteer Login
-              </button>
-            </Link>
-            <Link to="/organizer/login">
-              <button className="bg-white text-purple-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors">
-                Organizer Login
-              </button>
-            </Link>
+            <button 
+              onClick={() => navigate('/login', { state: { role: 'volunteer' } })}
+              className="bg-white text-primary-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors"
+            >
+              Volunteer Login
+            </button>
+            <button 
+              onClick={() => navigate('/login', { state: { role: 'organizer' } })}
+              className="bg-white text-purple-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors"
+            >
+              Organizer Login
+            </button>
           </div>
         </div>
       </div>
@@ -97,7 +98,7 @@ const Landing = () => {
       <footer className="bg-gray-900 text-white py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <p className="text-gray-400">
-            © 2024 College Fest Management System. All rights reserved.
+            © 2026 FestOps. All rights reserved.
           </p>
         </div>
       </footer>

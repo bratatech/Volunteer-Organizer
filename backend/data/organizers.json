@@ -1,13 +1,1 @@
-[
-  {
-    "id": "org-001",
-    "email": "organizer@example.com",
-    "password": "$2b$10$sfY9Exl6UTvWKbYHju4om.6sjKK8DLPBPP8VxDFdlRCE5aTOib8GW",
-    "role": "organizer",
-    "createdAt": "2026-05-17T13:40:00.000Z",
-    "eventsCreated": [
-      "act-001",
-      "act-002"
-    ]
-  }
-]
+[]

@@ -46,7 +46,15 @@ const readData = async (filename) => {
     await ensureDataDir();
     const filePath = path.join(dataDir, filename);
     const data = await fs.readFile(filePath, 'utf8');
-    return JSON.parse(data);
+    if (!data || data.trim() === '') {
+      return [];
+    }
+    try {
+      return JSON.parse(data);
+    } catch (parseError) {
+      console.warn(`Warning: Failed to parse JSON from ${filename}. Defaulting to empty array. Error: ${parseError.message}`);
+      return [];
+    }
   } catch (error) {
     if (error.code === 'ENOENT') {
       return [];
@@ -65,4 +73,30 @@ const writeData = async (filename, data) => {
   }
 };
 
-module.exports = { readData, writeData };
+const verifyAndInitializeDatabases = async () => {
+  await ensureDataDir();
+  const dbFiles = ['volunteers.json', 'activities.json', 'tasks.json', 'messages.json', 'organizers.json'];
+  for (const file of dbFiles) {
+    const filePath = path.join(dataDir, file);
+    let needsInit = false;
+    try {
+      const data = await fs.readFile(filePath, 'utf8');
+      if (!data || data.trim() === '') {
+        needsInit = true;
+      } else {
+        JSON.parse(data); // Try parsing to verify validity
+      }
+    } catch (err) {
+      needsInit = true;
+    }
+
+    if (needsInit) {
+      await fs.writeFile(filePath, '[]');
+      console.log(`Database file successfully initialized with empty array: ${file}`);
+    }
+  }
+  console.log('Database initialized successfully');
+};
+
+module.exports = { readData, writeData, verifyAndInitializeDatabases };
+

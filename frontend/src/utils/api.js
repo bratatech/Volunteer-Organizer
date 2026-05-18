@@ -43,5 +43,39 @@ export const assignTask = (id, email) => api.patch(`/tasks/${id}/assign`, { emai
 export const unassignTask = (id) => api.patch(`/tasks/${id}/unassign`);
 export const deleteTask = (id) => api.delete(`/tasks/${id}`);
 export const getMyTasks = () => api.get('/tasks/my-tasks');
+export const toggleTaskStatus = (id) => api.patch(`/tasks/${id}/status`);
+
+// Chat APIs
+export const getChatHistory = (activityId) => api.get(`/chat/${activityId}`);
+
+// Profile Update API
+export const updateVolunteerProfile = (data) => api.put('/auth/volunteer/profile', data);
+export const getVolunteerProfile = () => api.get('/auth/volunteer/profile');
+
+// Application Approval API
+export const updateApplicationStatus = (activityId, volunteerId, status) => 
+  api.patch(`/activities/${activityId}/applications/${volunteerId}`, { status });
+
+// Explore and Discovery APIs
+export const getAvailableOpportunities = () => api.get('/activities/explore');
+export const applyForActivity = (id) => api.post(`/activities/${id}/join`);
+export const claimTask = (id) => api.post(`/tasks/${id}/claim`);
+
+// Delete Activity API
+export const deleteActivity = (id) => api.delete(`/activities/${id}`);
+
+// Conclude & Certify API
+export const concludeActivityAndIssueCertificates = (id, certifiedVolunteerIds) => 
+  api.post(`/activities/${id}/conclude`, { certifiedVolunteerIds });
+
+// Workflow loop APIs
+export const applyForOpportunity = (activityId, taskId = null) => 
+  api.post(`/activities/${activityId}/apply`, { taskId });
+
+export const handleApplicationDecision = (activityId, volunteerId, action) => 
+  api.patch(`/activities/${activityId}/applications/${volunteerId}`, { action });
+
+// Organizer Analytics API
+export const getVolunteerOverview = () => api.get('/organizers/volunteer-overview');
 
 export default api;

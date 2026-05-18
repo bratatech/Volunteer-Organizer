@@ -3,10 +3,8 @@ import { useState, useEffect } from 'react';
 
 // Pages
 import Landing from './pages/Landing';
-import VolunteerSignup from './pages/VolunteerSignup';
-import VolunteerLogin from './pages/VolunteerLogin';
-import OrganizerSignup from './pages/OrganizerSignup';
-import OrganizerLogin from './pages/OrganizerLogin';
+import Login from './pages/Login';
+import Signup from './pages/Signup';
 import VolunteerDashboard from './pages/VolunteerDashboard';
 import OrganizerDashboard from './pages/OrganizerDashboard';
 
@@ -45,32 +43,30 @@ function App() {
         {/* Public Routes */}
         <Route path="/" element={<Landing />} />
         
-        {/* Volunteer Routes */}
+        {/* Unified Authentication Routes */}
         <Route 
-          path="/volunteer/signup" 
-          element={user ? <Navigate to={`/${user.role}/dashboard`} /> : <VolunteerSignup />} 
+          path="/login" 
+          element={user ? <Navigate to={`/${user.role}/dashboard`} /> : <Login setUser={setUser} />} 
         />
         <Route 
-          path="/volunteer/login" 
-          element={user ? <Navigate to={`/${user.role}/dashboard`} /> : <VolunteerLogin setUser={setUser} />} 
+          path="/signup" 
+          element={user ? <Navigate to={`/${user.role}/dashboard`} /> : <Signup />} 
         />
+
+        {/* Legacy Backwards Compatibility Redirects */}
+        <Route path="/volunteer/signup" element={<Navigate to="/signup" state={{ role: 'volunteer' }} replace />} />
+        <Route path="/volunteer/login" element={<Navigate to="/login" state={{ role: 'volunteer' }} replace />} />
+        <Route path="/organizer/signup" element={<Navigate to="/signup" state={{ role: 'organizer' }} replace />} />
+        <Route path="/organizer/login" element={<Navigate to="/login" state={{ role: 'organizer' }} replace />} />
+
+        {/* Dashboard Routes */}
         <Route 
           path="/volunteer/dashboard" 
-          element={user && user.role === 'volunteer' ? <VolunteerDashboard user={user} onLogout={handleLogout} /> : <Navigate to="/volunteer/login" />} 
-        />
-        
-        {/* Organizer Routes */}
-        <Route 
-          path="/organizer/signup" 
-          element={user ? <Navigate to={`/${user.role}/dashboard`} /> : <OrganizerSignup />} 
-        />
-        <Route 
-          path="/organizer/login" 
-          element={user ? <Navigate to={`/${user.role}/dashboard`} /> : <OrganizerLogin setUser={setUser} />} 
+          element={user && user.role === 'volunteer' ? <VolunteerDashboard user={user} onLogout={handleLogout} /> : <Navigate to="/login" state={{ role: 'volunteer' }} replace />} 
         />
         <Route 
           path="/organizer/dashboard" 
-          element={user && user.role === 'organizer' ? <OrganizerDashboard user={user} onLogout={handleLogout} /> : <Navigate to="/organizer/login" />} 
+          element={user && user.role === 'organizer' ? <OrganizerDashboard user={user} onLogout={handleLogout} /> : <Navigate to="/login" state={{ role: 'organizer' }} replace />} 
         />
         
         {/* Catch all */}

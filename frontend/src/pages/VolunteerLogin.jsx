@@ -44,7 +44,7 @@ const VolunteerLogin = ({ setUser }) => {
       <div className="max-w-md w-full">
         <div className="text-center mb-8">
           <Link to="/" className="text-4xl font-bold text-primary-600">
-            🎉 CollegeFest
+            🎉 FestOps
           </Link>
           <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
             Volunteer Login

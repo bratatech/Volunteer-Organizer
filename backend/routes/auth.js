@@ -2,13 +2,14 @@ const express = require('express');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { readData, writeData } = require('../utils/fileHandler');
+const { authenticateToken } = require('../middleware/auth');
 
 const router = express.Router();
 
 // Volunteer Signup
 router.post('/volunteer/signup', async (req, res) => {
   try {
-    const { email, password, rollNo, phoneNo } = req.body;
+    const { email, password, rollNo, phoneNo, skills, interests, socialHandles } = req.body;
 
     // Validation
     if (!email || !password || !rollNo || !phoneNo) {
@@ -38,6 +39,10 @@ router.post('/volunteer/signup', async (req, res) => {
       phoneNo,
       role: 'volunteer',
       createdAt: new Date().toISOString(),
+      skills: skills || [],
+      interests: interests || [],
+      socialHandles: socialHandles || {},
+      badges: [],
       activities: []
     };
 
@@ -46,7 +51,12 @@ router.post('/volunteer/signup', async (req, res) => {
 
     res.status(201).json({ message: 'Volunteer registered successfully' });
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
+    console.error('Error in /volunteer/signup:', error.stack || error);
+    res.status(500).json({
+      message: 'Server error: A critical database or file access error occurred during volunteer registration.',
+      error: error.message,
+      stack: error.stack
+    });
   }
 });
 
@@ -85,11 +95,20 @@ router.post('/volunteer/login', async (req, res) => {
         email: volunteer.email,
         rollNo: volunteer.rollNo,
         phoneNo: volunteer.phoneNo,
-        role: 'volunteer'
+        role: 'volunteer',
+        skills: volunteer.skills || [],
+        interests: volunteer.interests || [],
+        socialHandles: volunteer.socialHandles || {},
+        badges: volunteer.badges || []
       }
     });
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
+    console.error('Error in /volunteer/login:', error.stack || error);
+    res.status(500).json({
+      message: 'Server error: A critical database or file access error occurred during volunteer login.',
+      error: error.message,
+      stack: error.stack
+    });
   }
 });
 
@@ -124,7 +143,12 @@ router.post('/organizer/signup', async (req, res) => {
 
     res.status(201).json({ message: 'Organizer registered successfully' });
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
+    console.error('Error in /organizer/signup:', error.stack || error);
+    res.status(500).json({
+      message: 'Server error: A critical database or file access error occurred during organizer registration.',
+      error: error.message,
+      stack: error.stack
+    });
   }
 });
 
@@ -165,7 +189,94 @@ router.post('/organizer/login', async (req, res) => {
       }
     });
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
+    console.error('Error in /organizer/login:', error.stack || error);
+    res.status(500).json({
+      message: 'Server error: A critical database or file access error occurred during organizer login.',
+      error: error.message,
+      stack: error.stack
+    });
+  }
+});
+
+// Get Volunteer Profile
+router.get('/volunteer/profile', authenticateToken, async (req, res) => {
+  try {
+    if (req.user.role !== 'volunteer') {
+      return res.status(403).json({ message: 'Only volunteers can access this profile' });
+    }
+
+    const volunteers = await readData('volunteers.json');
+    const volunteer = volunteers.find(v => v.id === req.user.id);
+
+    if (!volunteer) {
+      return res.status(404).json({ message: 'Volunteer not found' });
+    }
+
+    res.json({
+      user: {
+        id: volunteer.id,
+        email: volunteer.email,
+        rollNo: volunteer.rollNo,
+        phoneNo: volunteer.phoneNo,
+        role: 'volunteer',
+        skills: volunteer.skills || [],
+        interests: volunteer.interests || [],
+        socialHandles: volunteer.socialHandles || {},
+        badges: volunteer.badges || [],
+        points: volunteer.points || 0,
+        certifications: volunteer.certifications || [],
+        activities: volunteer.activities || []
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching volunteer profile:', error.stack || error);
+    res.status(500).json({ message: 'Server error fetching profile data', error: error.message });
+  }
+});
+
+// Update Volunteer Profile
+router.put('/volunteer/profile', authenticateToken, async (req, res) => {
+  try {
+    if (req.user.role !== 'volunteer') {
+      return res.status(403).json({ message: 'Only volunteers can update their profile' });
+    }
+
+    const { skills, interests, socialHandles } = req.body;
+    const volunteers = await readData('volunteers.json');
+    const volunteerIndex = volunteers.findIndex(v => v.id === req.user.id);
+
+    if (volunteerIndex === -1) {
+      return res.status(404).json({ message: 'Volunteer not found' });
+    }
+
+    // Update fields
+    volunteers[volunteerIndex].skills = skills || volunteers[volunteerIndex].skills || [];
+    volunteers[volunteerIndex].interests = interests || volunteers[volunteerIndex].interests || [];
+    volunteers[volunteerIndex].socialHandles = socialHandles || volunteers[volunteerIndex].socialHandles || {};
+
+    await writeData('volunteers.json', volunteers);
+
+    res.json({
+      message: 'Profile updated successfully',
+      user: {
+        id: volunteers[volunteerIndex].id,
+        email: volunteers[volunteerIndex].email,
+        rollNo: volunteers[volunteerIndex].rollNo,
+        phoneNo: volunteers[volunteerIndex].phoneNo,
+        role: 'volunteer',
+        skills: volunteers[volunteerIndex].skills,
+        interests: volunteers[volunteerIndex].interests,
+        socialHandles: volunteers[volunteerIndex].socialHandles,
+        badges: volunteers[volunteerIndex].badges || []
+      }
+    });
+  } catch (error) {
+    console.error('Error in /volunteer/profile:', error.stack || error);
+    res.status(500).json({
+      message: 'Server error: A critical database or file access error occurred during profile update.',
+      error: error.message,
+      stack: error.stack
+    });
   }
 });
 
