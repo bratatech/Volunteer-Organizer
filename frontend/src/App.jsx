@@ -13,12 +13,30 @@ function App() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check if user is logged in
-    const token = localStorage.getItem('token');
-    const userData = localStorage.getItem('user');
+    // Check if user is logged in safely across localStorage and sessionStorage
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+    const userData = localStorage.getItem('user') || sessionStorage.getItem('user');
     
-    if (token && userData) {
-      setUser(JSON.parse(userData));
+    if (
+      token && 
+      token !== 'null' && 
+      token !== 'undefined' && 
+      userData && 
+      userData !== 'null' && 
+      userData !== 'undefined'
+    ) {
+      try {
+        setUser(JSON.parse(userData));
+      } catch (e) {
+        console.error('Failed to parse userData:', e);
+        setUser(null);
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        sessionStorage.removeItem('token');
+        sessionStorage.removeItem('user');
+      }
+    } else {
+      setUser(null);
     }
     setLoading(false);
   }, []);
@@ -26,6 +44,8 @@ function App() {
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    sessionStorage.removeItem('token');
+    sessionStorage.removeItem('user');
     setUser(null);
   };
 
@@ -37,6 +57,11 @@ function App() {
     );
   }
 
+  const hasToken = () => {
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+    return token && token !== 'null' && token !== 'undefined';
+  };
+
   return (
     <Router>
       <Routes>
@@ -46,11 +71,11 @@ function App() {
         {/* Unified Authentication Routes */}
         <Route 
           path="/login" 
-          element={user ? <Navigate to={`/${user.role}/dashboard`} /> : <Login setUser={setUser} />} 
+          element={user && hasToken() ? <Navigate to={`/${user.role}/dashboard`} /> : <Login setUser={setUser} />} 
         />
         <Route 
           path="/signup" 
-          element={user ? <Navigate to={`/${user.role}/dashboard`} /> : <Signup />} 
+          element={user && hasToken() ? <Navigate to={`/${user.role}/dashboard`} /> : <Signup />} 
         />
 
         {/* Legacy Backwards Compatibility Redirects */}
@@ -62,11 +87,11 @@ function App() {
         {/* Dashboard Routes */}
         <Route 
           path="/volunteer/dashboard" 
-          element={user && user.role === 'volunteer' ? <VolunteerDashboard user={user} onLogout={handleLogout} /> : <Navigate to="/login" state={{ role: 'volunteer' }} replace />} 
+          element={user && user.role === 'volunteer' && hasToken() ? <VolunteerDashboard user={user} onLogout={handleLogout} /> : <Navigate to="/login" state={{ role: 'volunteer' }} replace />} 
         />
         <Route 
           path="/organizer/dashboard" 
-          element={user && user.role === 'organizer' ? <OrganizerDashboard user={user} onLogout={handleLogout} /> : <Navigate to="/login" state={{ role: 'organizer' }} replace />} 
+          element={user && user.role === 'organizer' && hasToken() ? <OrganizerDashboard user={user} onLogout={handleLogout} /> : <Navigate to="/login" state={{ role: 'organizer' }} replace />} 
         />
         
         {/* Catch all */}

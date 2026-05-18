@@ -10,14 +10,28 @@ const api = axios.create({
   },
 });
 
-// Add token to requests
+// Add token to requests safely
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
-  if (token) {
+  const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+  if (token && token !== 'null' && token !== 'undefined') {
     config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
 });
+
+// Response interceptor to catch 401 and redirect to landing page
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response && error.response.status === 401) {
+      console.warn('Session invalid or expired - clearing storage and redirecting...');
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      window.location.href = '/';
+    }
+    return Promise.reject(error);
+  }
+);
 
 // Auth APIs
 export const volunteerSignup = (data) => api.post('/auth/volunteer/signup', data);
