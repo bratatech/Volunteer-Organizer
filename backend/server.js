@@ -5,6 +5,7 @@ const cors = require('cors');
 const http = require('http');
 const { Server } = require('socket.io');
 const { readData, writeData, verifyAndInitializeDatabases } = require('./utils/fileHandler');
+const { initializeTables } = require('./utils/db');
 
 const authRoutes = require('./routes/auth');
 const activityRoutes = require('./routes/activities');
@@ -60,7 +61,7 @@ io.on('connection', (socket) => {
   // Handle message sending
   socket.on('send_message', async (data) => {
     const { activityId, senderEmail, senderRole, message } = data;
-    
+
     if (!activityId || !senderEmail || !message) return;
 
     const newMessage = {
@@ -92,9 +93,20 @@ io.on('connection', (socket) => {
 
 const startServer = async () => {
   try {
+    // 1. Ensure local JSON files exist (always required)
     await verifyAndInitializeDatabases();
+
+    // 2. Try to connect to Supabase and create tables.
+    //    NON-FATAL: if this fails the server still starts with JSON-only mode.
+    try {
+      await initializeTables();
+    } catch (dbErr) {
+      console.warn('⚠️  Supabase init failed — running in JSON-only mode.');
+      console.warn('   Reason:', dbErr.message);
+    }
+
     server.listen(PORT, () => {
-      console.log(`Server is running on port ${PORT}`);
+      console.log(`🚀 Server is running on port ${PORT}`);
     });
   } catch (error) {
     console.error('Failed to initialize database and start server:', error);
